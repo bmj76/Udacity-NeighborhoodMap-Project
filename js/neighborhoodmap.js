@@ -58,82 +58,138 @@ var ViewModel = function() {
 	});
 
 	function FilterControl(controlDiv, map) {
-        // Set CSS for the control border.
-        var controlUI = document.createElement('div');
-        controlUI.style.backgroundColor = '#fff';
-        controlUI.style.border = '2px solid #fff';
-        controlUI.style.borderRadius = '3px';
-        controlUI.style.boxShadow = '0 2px 6px rgba(0,0,0,.3)';
-        controlUI.style.cursor = 'pointer';
-        controlUI.style.marginBottom = '22px';
-        controlUI.style.textAlign = 'center';
-        controlUI.title = 'Click to Open the Map Filter';
-        controlDiv.appendChild(controlUI);
+		// Set CSS for the control border.
+		var controlUI = document.createElement('div');
+		controlUI.style.backgroundColor = '#fff';
+		controlUI.style.border = '2px solid #fff';
+		controlUI.style.borderRadius = '3px';
+		controlUI.style.boxShadow = '0 2px 6px rgba(0,0,0,.3)';
+		controlUI.style.cursor = 'pointer';
+		controlUI.style.marginBottom = '22px';
+		controlUI.style.textAlign = 'center';
+		controlUI.title = 'Click to Open the Map Filter';
+		controlDiv.appendChild(controlUI);
 
-        // Set CSS for the control interior.
-        var controlText = document.createElement('div');
-        controlText.style.color = 'rgb(25,25,25)';
-        controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
-        controlText.style.fontSize = '16px';
-        controlText.style.lineHeight = '38px';
-        controlText.style.paddingLeft = '5px';
-        controlText.style.paddingRight = '5px';
-        controlText.innerHTML = 'Filter Markers';
-        controlUI.appendChild(controlText);
+		// Set CSS for the control interior.
+		var controlText = document.createElement('div');
+		controlText.style.color = 'rgb(25,25,25)';
+		controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
+		controlText.style.fontSize = '16px';
+		controlText.style.lineHeight = '38px';
+		controlText.style.paddingLeft = '5px';
+		controlText.style.paddingRight = '5px';
+		controlText.innerHTML = 'Filter Markers';
+		controlUI.appendChild(controlText);
 
-        // Setup the click event listeners: Open (or close) the modal filter window
-        controlUI.addEventListener('click', function() {
-          $('#filterModal').modal('toggle');
-        });
-      }
+		// Setup the click event listeners: Open (or close) the modal filter window
+		controlUI.addEventListener('click', function() {
+		  $('#filterModal').modal('toggle');
+		});
+	  }
 
 
+	// Create a new blank array for all the listing markers.
+	var markers = [];
+	var currentMark;
+	
+	// Function to build the map markers and infowWindows
+	function buildMarkers(map) {
 
-    function buildMarkers(map) {
-
-    	ko.utils.arrayForEach(self.placeList(), function(item) {
-        	var markerCoords = {lat: item.lat(), lng: item.lng()};
-        	var marker = new google.maps.Marker({
+		ko.utils.arrayForEach(self.placeList(), function(item) {
+			var markerCoords = {lat: item.lat(), lng: item.lng()};
+			
+			// Default color for the marker
+			var defaultIcon = makeMarkerIcon('0091ff');
+			// Highlighted Marker
+			var highlightedIcon = makeMarkerIcon('FFFF24');
+			// Selected Marker
+			var selectedIcon = makeMarkerIcon('FF0000');
+			var marker = new google.maps.Marker({
 				position: markerCoords,
 				map: map,
-				title: item.name()
+				animation: google.maps.Animation.DROP,
+				title: item.name(),
+				icon: defaultIcon
+			});
+			//Push onto an array to track our markers so we can access them later easily
+			markers.push(marker);
+			var infowindow = new google.maps.InfoWindow({
+			  content: item.name()
 			});
 
-			var infowindow = new google.maps.InfoWindow({
-	          content: item.name()
-	        });
-        	marker.addListener('click', function() {
-          		infowindow.open(map,marker);
-        	});
+			//call back for the infowindow
+			//Code Source: https://stackoverflow.com/questions/6777721/google-maps-api-v3-infowindow-close-event-callback
+			google.maps.event.addListener(infowindow,'closeclick',function(){
+			   currentMark.setIcon(defaultIcon);
+			});
 
-        });
-    };
+			marker.addListener('click', function() {
+				// var to keep a pointer to the 'this' scope
+				var that = this;
+				infowindow.open(map,marker);
+				// Animate the marker for 3 seconds
+				this.setAnimation(google.maps.Animation.BOUNCE);
+				setTimeout(function(){ that.setAnimation(null) }, 3000);
+				currentMark = that;
+				that.setIcon(selectedIcon);
+			});
 
-    /* Initialize map */
+
+
+		});
+
+		
+	};
+
+	/* Initialize map */
 	var map;
-    (function initMap() {
-        // Constructor creates a new map - only center and zoom are required.
-        map = new google.maps.Map(document.getElementById('map'), {
-          center: {lat: 38.594754, lng: -90.519612},
-          zoom: 17
-        });
+	(function initMap() {
+		// Constructor creates a new map - only center and zoom are required.
+		map = new google.maps.Map(document.getElementById('map'), {
+		  center: {lat: 38.594754, lng: -90.519612},
+		  zoom: 17
+		});
 
-         // Create the DIV to hold the control and call the FilterControl()
-        // constructor passing in this DIV.
-        var filterControlDiv = document.createElement('div');
-        var filterControl = new FilterControl(filterControlDiv, map);
-        filterControlDiv.index = 1;
-        map.controls[google.maps.ControlPosition.TOP_CENTER].push(filterControlDiv);
+		 // Create the DIV to hold the control and call the FilterControl()
+		// constructor passing in this DIV.
+		var filterControlDiv = document.createElement('div');
+		var filterControl = new FilterControl(filterControlDiv, map);
+		filterControlDiv.index = 1;
+		map.controls[google.maps.ControlPosition.TOP_CENTER].push(filterControlDiv);
 
-        buildMarkers(map);
+		buildMarkers(map);
 
-        google.maps.Map.prototype.clearMarkers = function() {
-    	for(var i=0; i < this.markers.length; i++){
-		        this.markers[i].setMap(null);
-		    }
-		    this.markers = new Array();
+		google.maps.Map.prototype.clearMarkers = function() {
+		for(var i=0; i < this.markers.length; i++){
+				this.markers[i].setMap(null);
+			}
+			this.markers = new Array();
 		};
-    })();
+	})();
+
+	// Code Source: Udacity API Course
+	// This function will loop through the listings and hide them all.
+	function hideMarkers(markers) {
+		for (var i = 0; i < markers.length; i++) {
+		  markers[i].setMap(null);
+		}
+	};
+
+	// Code Source: Udacity API Course
+	// This function takes in a COLOR, and then creates a new marker
+	// icon of that color. The icon will be 21 px wide by 34 high, have an origin
+	// of 0, 0 and be anchored at 10, 34).
+	function makeMarkerIcon(markerColor) {
+		var markerImage = new google.maps.MarkerImage('http://chart.googleapis.com/chart?chst=d_map_spin&chld=1.15|0|'+ markerColor +
+			'|40|_|%E2%80%A2',
+		new google.maps.Size(21, 34),
+		new google.maps.Point(0, 0),
+		new google.maps.Point(10, 34),
+		new google.maps.Size(21,34));
+		return markerImage;
+	};
+
+
 
 };
 
