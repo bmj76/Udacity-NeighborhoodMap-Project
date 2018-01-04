@@ -57,14 +57,7 @@ var ViewModel = function() {
 			self.placeList.push(new Place(placeItem));
 	});
 
-
-	var findCenter = function(placeList){
-
-	}
-
-
 	function FilterControl(controlDiv, map) {
-
         // Set CSS for the control border.
         var controlUI = document.createElement('div');
         controlUI.style.backgroundColor = '#fff';
@@ -92,39 +85,54 @@ var ViewModel = function() {
         controlUI.addEventListener('click', function() {
           $('#filterModal').modal('toggle');
         });
-
       }
 
 
-	var map;
 
-	/* Initialize map */
+    function buildMarkers(map) {
+
+    	ko.utils.arrayForEach(self.placeList(), function(item) {
+        	var markerCoords = {lat: item.lat(), lng: item.lng()};
+        	var marker = new google.maps.Marker({
+				position: markerCoords,
+				map: map,
+				title: item.name()
+			});
+
+			var infowindow = new google.maps.InfoWindow({
+	          content: item.name()
+	        });
+        	marker.addListener('click', function() {
+          		infowindow.open(map,marker);
+        	});
+
+        });
+    };
+
+    /* Initialize map */
+	var map;
     (function initMap() {
         // Constructor creates a new map - only center and zoom are required.
         map = new google.maps.Map(document.getElementById('map'), {
           center: {lat: 38.594754, lng: -90.519612},
-          zoom: 18
+          zoom: 17
         });
 
-         // Create the DIV to hold the control and call the CenterControl()
+         // Create the DIV to hold the control and call the FilterControl()
         // constructor passing in this DIV.
         var filterControlDiv = document.createElement('div');
         var filterControl = new FilterControl(filterControlDiv, map);
-
         filterControlDiv.index = 1;
         map.controls[google.maps.ControlPosition.TOP_CENTER].push(filterControlDiv);
-        var markerCoords = {lat: 38.594754, lng: -90.519612};
-        var marker = new google.maps.Marker({
-          position: markerCoords,
-          map: map,
-          title: 'First Marker!'
-        });
-        var infowindow = new google.maps.InfoWindow({
-          content: 'Test InfoWindow'
-        });
-        marker.addListener('click', function() {
-          infowindow.open(map,marker);
-        });
+
+        buildMarkers(map);
+
+        google.maps.Map.prototype.clearMarkers = function() {
+    	for(var i=0; i < this.markers.length; i++){
+		        this.markers[i].setMap(null);
+		    }
+		    this.markers = new Array();
+		};
     })();
 
 };

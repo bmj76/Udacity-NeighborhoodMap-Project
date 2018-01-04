@@ -6,7 +6,7 @@ The application shows a Google map with markers of these places.  Clicking the m
 
 ## Developer Information
 
-Bower was used to manage dependencies.  Please review the bower.json file for more information.
+Bower was used to manage project dependencies.  Please review the bower.json file for more information.
 
 The bootstrap library is used to ensure responsive design.  A bootstrap modal window is used to create an overlay when the Filter Markers button is pushed.
 
