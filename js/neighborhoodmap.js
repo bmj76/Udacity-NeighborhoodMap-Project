@@ -92,10 +92,48 @@ var ViewModel = function() {
 	var markers = [];
 	var currentMark;
 
+	function getYelpData(marker) {
+
+		var access_token = 'fOj7Wr_V3PZCwdeos5KXI9BuXM72xtW75m5utkqQfgCOy0FRQZwt8cgcehouthHG-Qwz6SW9QmDoLl1kt7Z0mWKfgg1HlbjqdUnA8ovQYzofsiFWj9QQNc0VNE5OWnYx';
+		var yelpSearchURL = 'https://api.yelp.com/v3/businesses/search';
+		var yelpReviewsURL = 'https://api.yelp.com/v3/businesses/{id}/reviews';
+
+		//https://stackoverflow.com/questions/5290336/getting-lat-lng-from-google-marker
+		var lat = marker.getPosition().lat();
+		var lng = marker.getPosition().lng();
+
+
+		var result = 'No Yelp Data found!';
+		//First we need to search for the business to get the Yelp ID and some location information
+		$.ajax( {
+		    url: yelpSearchURL,
+		    type: 'GET',
+		    data: { 
+		    	term: marker.title,
+		    	latitude: lat,
+		    	longitude: lng,
+		    	limit: 1,
+		    	locale: 'en_US'
+		    },
+		    beforeSend : function( xhr ) {
+		    	xhr.setRequestHeader( 'Authorization', 'BEARER ' + access_token );
+		    	xhr.setRequestHeader( 'Access-Control-Allow-Origin', '*' );
+		    },
+		    success: function( response ) {
+		        result = response;
+		    }
+
+		} );
+
+		return result;
+	}
+
 	function buildInfoWindow(infowindow,map,marker) {
-		console.log('hello');
+		
 		infowindow.open(map,marker);
 		infowindow.setContent('<div>' + marker.title + ' - ' + marker.id + '</div><div id="pano"></div>');
+		var yelpData = getYelpData(marker);
+		console.log(yelpData);
 
 	}
 	// Function to build the map markers and infowWindows

@@ -20,3 +20,4 @@ This project uses the Google Maps API to generate the Map, Markers, InfoWindows 
 
 Bootstrap Modal Window: [https://v4-alpha.getbootstrap.com/components/modal/#examples]
 Google Map Custom Control: [https://developers.google.com/maps/documentation/javascript/examples/control-custom]
+API with Bearer token: [https://wp-oauth.com/documentation/how-tos/using-a-bearer-token-with-wp-rest-api/]
