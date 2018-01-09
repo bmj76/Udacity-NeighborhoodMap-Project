@@ -15,11 +15,11 @@ var initialPlaces = [
 		lng: -90.519430
 	},
 	{
-		name: 'Sushi AI',
-		type: 'Japanese & Sushi',
-		url: 'http://sushiaimenu.com',
-		lat: 38.595066, 
-		lng: -90.519720
+		name: 'Tucker\'s Place',
+		type: 'Steakhouse',
+		url: 'www.tuckersplacestl.com/',
+		lat: 38.5919648, 
+		lng: -90.5072234
 	},
 	{
 		name: 'Shahrazad Mediterranean Restaurant',
@@ -45,16 +45,36 @@ var Place = function(data) {
 	this.url = ko.observable(data.url);
 	this.lat = ko.observable(data.lat);
 	this.lng = ko.observable(data.lng);
+	this.isVisible = ko.observable();
 }
 
 // The ViewModel function
 var ViewModel = function() {
 	var self = this;
-
+	var markers = [];
+	var currentMark;
 	this.placeList = ko.observableArray([]);
 
 	initialPlaces.forEach(function(placeItem){
 			self.placeList.push(new Place(placeItem));
+	});
+	
+	self.currentFilter = ko.observable(); // property to store the filter
+
+	// A computed column to track which items match the currentFilter
+	self.filterPlaces = ko.computed(function() {
+		return ko.utils.arrayFilter(self.placeList(), function(place) {
+			//return place.name() == self.currentFilter();
+			if (place.name().indexOf(self.currentFilter()) > -1) {
+				//console.log('setting ' + place.name() + ' to: true');
+				place.isVisible(true);
+				return true;
+			} else {
+				//console.log('setting ' + place.name() + ' to: false');
+				place.isVisible(false);
+				return false;
+			}
+		});
 	});
 
 	function FilterControl(controlDiv, map) {
@@ -87,66 +107,105 @@ var ViewModel = function() {
 		});
 	  }
 
+	function getFourSquareVenue(venue_id,client_id,client_secret,infowindow,mpa,marker) {
+		var fourSquareVenueURL = 'https://api.foursquare.com/v2/venues/';
 
-	// Create a new blank array for all the listing markers.
-	var markers = [];
-	var currentMark;
+		var result = 'No Third Party Data found!';
+		//Get Venue Details
+		$.ajax( {
+			url: fourSquareVenueURL + venue_id,
+			type: 'GET',
+			data: { 
+				client_id: client_id,
+				client_secret: client_secret,
+				v: '20180105'
+			},
+			success: function( data ) {
+				
+				var venue = data.response.venue;
+				// console.log(venue);
+				var output = '<div class="container-fluid">';
+				output += '<div>' + venue.name + '</div>';
+				if (venue.contact.formattedPhone) {
+					output += '<div>' + venue.contact.formattedPhone + '</div>';
+				} else {
+					output += '<div>No Phone Number Listed</div>';
+				}
+				if (venue.hours && venue.hours.status) {
+					output += '<div>' + venue.hours.status + '</div>';
+				} else {
+					output += '<div>No Operating Hours listed</div>';
+				}
+				if (venue.rating) {
+					output += '<div>Rating: ' + venue.rating + '</div>';
+				} else {
+					output += '<div>No Rating Available</div>';
+				}
+				if (venue.url) {
+					output += '<div><a href="' + venue.url + '" target="_blank">' + venue.url + '</a></div>';
+				} else {
+					output += '<div>No URL Listed</div>';
+				}
+				output += '<div><img style="width:200px; height:33px" src="images/foursquare.png" alt="Foursquare logo image"></div>';
+				output += '</div>';
 
-	function getYelpData(marker) {
+				infowindow.open(map,marker);
+				infowindow.setContent(output);
+			},
+			error: function(e) {
+				alert('Error connecting to the Foursquare Venue API!');
+				return result;
+			}
 
-		var access_token = 'fOj7Wr_V3PZCwdeos5KXI9BuXM72xtW75m5utkqQfgCOy0FRQZwt8cgcehouthHG-Qwz6SW9QmDoLl1kt7Z0mWKfgg1HlbjqdUnA8ovQYzofsiFWj9QQNc0VNE5OWnYx';
-		var yelpSearchURL = 'https://api.yelp.com/v3/businesses/search';
-		var yelpReviewsURL = 'https://api.yelp.com/v3/businesses/{id}/reviews';
+		});
+	}
 
+	function getFourSquareData(infowindow,map,marker) {
+
+		var client_id = 'LN2RBI5V4ESXGLQWXDER05TF2CJWZYDFXGSVW3HEGBF2KHJV';
+		var client_secret = 'Z3YKGDKSTYG2XEACBMSRPQS4YCWNRQWPVUHAMYETHK1KLCHY';
+		var fourSquareSearchURL = 'https://api.foursquare.com/v2/venues/search';
+		
 		//https://stackoverflow.com/questions/5290336/getting-lat-lng-from-google-marker
 		var lat = marker.getPosition().lat();
 		var lng = marker.getPosition().lng();
 
-
-		var result = 'No Yelp Data found!';
-		//First we need to search for the business to get the Yelp ID and some location information
+		var result = 'No Third Party Data found!';
+		//First we need to search for the business to get the Foursquare Venue ID 
 		$.ajax( {
-		    url: yelpSearchURL,
-		    type: 'GET',
-		    data: { 
-		    	term: marker.title,
-		    	latitude: lat,
-		    	longitude: lng,
-		    	limit: 1,
-		    	locale: 'en_US'
-		    },
-		    beforeSend : function( xhr ) {
-		    	xhr.setRequestHeader( 'Authorization', 'BEARER ' + access_token );
-		    	xhr.setRequestHeader( 'Access-Control-Allow-Origin', '*' );
-		    },
-		    success: function( response ) {
-		        result = response;
-		    }
+			url: fourSquareSearchURL,
+			type: 'GET',
+			data: { 
+				client_id: client_id,
+				client_secret: client_secret,
+				query: marker.title,
+				ll: lat + ',' + lng,
+				v: '20170801',
+				limit: 1
+			},
+			success: function( data ) {
+				result = data.response.venues;
+				var venue_id = result[0].id;
+				// Make a call to a 2nd function to get details once we know the venue id
+				getFourSquareVenue(venue_id,client_id,client_secret,infowindow,map,marker);
+			},
+			error: function(e) {
+				alert('Error connecting to the Foursquare Search API!');
+				return result;
+			}
 
-		} );
-
-		return result;
-	}
-
-	function buildInfoWindow(infowindow,map,marker) {
-		
-		infowindow.open(map,marker);
-		infowindow.setContent('<div>' + marker.title + ' - ' + marker.id + '</div><div id="pano"></div>');
-		var yelpData = getYelpData(marker);
-		console.log(yelpData);
-
+		});
 	}
 	// Function to build the map markers and infowWindows
 	function buildMarkers(map) {
 		var currentMark, countItems = 0;
 		ko.utils.arrayForEach(self.placeList(), function(item) {
+			
 			var markerCoords = {lat: item.lat(), lng: item.lng()};
 			
 			// Default color for the marker
 			var defaultIcon = makeMarkerIcon('0091ff');
 			// Highlighted Marker
-			var highlightedIcon = makeMarkerIcon('FFFF24');
-			// Selected Marker
 			var selectedIcon = makeMarkerIcon('FF0000');
 			var marker = new google.maps.Marker({
 				position: markerCoords,
@@ -156,23 +215,35 @@ var ViewModel = function() {
 				icon: defaultIcon,
 				id: countItems
 			});
+
 			//Push onto an array to track our markers so we can access them later easily
 			markers.push(marker);
 			var infowindow = new google.maps.InfoWindow({
-			  content: item.name()
+				content: item.name()
+			});
+
+			// Subscribe to the isVisible variable so that when it changes, so do the markers.  cool.
+			console.log(item.name() + ': ' + item.isVisible());
+			item.isVisible.subscribe(function(currentState) {
+				console.log(item.name() + ': ' + item.isVisible());
+				if (currentState) {
+					marker.setMap(map);
+				} else {
+					marker.setMap(null);
+				}
 			});
 
 			//call back for the infowindow
 			//Code Source: https://stackoverflow.com/questions/6777721/google-maps-api-v3-infowindow-close-event-callback
 			google.maps.event.addListener(infowindow,'closeclick',function(){
-			   currentMark.setIcon(defaultIcon);
+				currentMark.setIcon(defaultIcon);
 			});
 
 			marker.addListener('click', function() {
 				// var to keep a pointer to the 'this' scope
 				var that = this;
 				
-				buildInfoWindow(infowindow,map,marker);
+				getFourSquareData(infowindow,map,marker);
 
 				//infowindow.open(map,marker);   
 				// Animate the marker for 3 seconds
@@ -183,7 +254,6 @@ var ViewModel = function() {
 			});
 			countItems++;
 		});
-		
 	};
 
 	/* Initialize map */
@@ -192,33 +262,19 @@ var ViewModel = function() {
 		// Constructor creates a new map - only center and zoom are required.
 		map = new google.maps.Map(document.getElementById('map'), {
 		  center: {lat: 38.594754, lng: -90.519612},
-		  zoom: 17
+		  zoom: 15
 		});
 
-		 // Create the DIV to hold the control and call the FilterControl()
+		// Create the DIV to hold the control and call the FilterControl()
 		// constructor passing in this DIV.
 		var filterControlDiv = document.createElement('div');
 		var filterControl = new FilterControl(filterControlDiv, map);
 		filterControlDiv.index = 1;
 		map.controls[google.maps.ControlPosition.TOP_CENTER].push(filterControlDiv);
 
+		//Build the Map Markers
 		buildMarkers(map);
-
-		google.maps.Map.prototype.clearMarkers = function() {
-		for(var i=0; i < this.markers.length; i++){
-				this.markers[i].setMap(null);
-			}
-			this.markers = new Array();
-		};
 	})();
-
-	// Code Source: Udacity API Course
-	// This function will loop through the listings and hide them all.
-	function hideMarkers(markers) {
-		for (var i = 0; i < markers.length; i++) {
-		  markers[i].setMap(null);
-		}
-	};
 
 	// Code Source: Udacity API Course
 	// This function takes in a COLOR, and then creates a new marker
@@ -233,57 +289,6 @@ var ViewModel = function() {
 		new google.maps.Size(21,34));
 		return markerImage;
 	};
-
-	// Code Source:  Google API Course
-	// This is the PLACE DETAILS search - it's the most detailed so it's only
-	// executed when a marker is selected, indicating the user wants more
-	// details about that place.
-	function getPlacesDetails(marker, infowindow) {
-	  var service = new google.maps.places.PlacesService(map);
-	  service.getDetails({
-		placeId: marker.id
-	  }, function(place, status) {
-		if (status === google.maps.places.PlacesServiceStatus.OK) {
-		  // Set the marker property on this infowindow so it isn't created again.
-		  infowindow.marker = marker;
-		  var innerHTML = '<div>';
-		  if (place.name) {
-			innerHTML += '<strong>' + place.name + '</strong>';
-		  }
-		  if (place.formatted_address) {
-			innerHTML += '<br>' + place.formatted_address;
-		  }
-		  if (place.formatted_phone_number) {
-			innerHTML += '<br>' + place.formatted_phone_number;
-		  }
-		  if (place.opening_hours) {
-			innerHTML += '<br><br><strong>Hours:</strong><br>' +
-				place.opening_hours.weekday_text[0] + '<br>' +
-				place.opening_hours.weekday_text[1] + '<br>' +
-				place.opening_hours.weekday_text[2] + '<br>' +
-				place.opening_hours.weekday_text[3] + '<br>' +
-				place.opening_hours.weekday_text[4] + '<br>' +
-				place.opening_hours.weekday_text[5] + '<br>' +
-				place.opening_hours.weekday_text[6];
-		  }
-		  if (place.photos) {
-			innerHTML += '<br><br><img src="' + place.photos[0].getUrl(
-				{maxHeight: 100, maxWidth: 200}) + '">';
-		  }
-		  innerHTML += '</div>';
-		  infowindow.setContent(innerHTML);
-		  infowindow.open(map, marker);
-		  // Make sure the marker property is cleared if the infowindow is closed.
-		  infowindow.addListener('closeclick', function() {
-			infowindow.marker = null;
-		  });
-		} else {
-			alert('Get Place Failed...')
-		}
-	  });
-	}
-
-
 
 };
 

@@ -31,23 +31,22 @@
           <div class="modal-body">
             <div>
               <!-- The knockout binding to a select box -->
-        
-              <select multiple="multiple" data-bind="options: placeList, optionsText: function(item) {
-                  return item.name;
-                },
-                optionsCaption: 'All Markers'">
-              </select>
+              <p>Filter: <input data-bind="textInput: currentFilter" placeholder="Enter Filter Text" /></p>
+              <ul data-bind="foreach: filterPlaces">
+                <li data-bind="text: name"></li>
+              </ul>
             </div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary">Save changes</button>
           </div>
         </div>
       </div>
     </div>
 
-    <div id="map"></div>
+
+    <!-- Bootstrap container for the Google map -->
+    <div class="container-fluid" id="map"></div>
 
     <script src="bower_components/jquery/dist/jquery.min.js"></script>
     <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
