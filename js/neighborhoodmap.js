@@ -45,14 +45,13 @@ var Place = function(data) {
 	this.url = ko.observable(data.url);
 	this.lat = ko.observable(data.lat);
 	this.lng = ko.observable(data.lng);
-	this.isVisible = ko.observable();
-}
+	this.isVisible = ko.observable(true);
+};
 
 // The ViewModel function
 var ViewModel = function() {
 	var self = this;
 	var markers = [];
-	var currentMark;
 	this.placeList = ko.observableArray([]);
 
 	initialPlaces.forEach(function(placeItem){
@@ -248,13 +247,15 @@ var ViewModel = function() {
 				//infowindow.open(map,marker);   
 				// Animate the marker for 3 seconds
 				this.setAnimation(google.maps.Animation.BOUNCE);
-				setTimeout(function(){ that.setAnimation(null) }, 3000);
+				setTimeout(function() { 
+					that.setAnimation(null);
+				}, 3000);
 				currentMark = that;
 				that.setIcon(selectedIcon);
 			});
 			countItems++;
 		});
-	};
+	}
 
 	/* Initialize map */
 	var map;
@@ -285,11 +286,9 @@ var ViewModel = function() {
 			'|40|_|%E2%80%A2',
 		new google.maps.Size(21, 34),
 		new google.maps.Point(0, 0),
-		new google.maps.Point(10, 34),
-		new google.maps.Size(21,34));
+		new google.maps.Point(10, 34));
 		return markerImage;
-	};
-
+	}
 };
 
 //Apply the Knockout bindings
