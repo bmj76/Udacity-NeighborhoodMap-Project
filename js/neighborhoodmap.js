@@ -237,7 +237,7 @@ var ViewModel = function() {
 				}, 3000);
 				currentMark = that;
 				that.setIcon(selectedIcon);
-			}
+			};
 			marker.addListener('click', function() {
 				// var to keep a pointer to the 'this' scope
 				this.openMe(this);
@@ -300,7 +300,7 @@ var ViewModel = function() {
 			}
 
 		});
-    }
+    };
 };
 
 //Apply the Knockout bindings

@@ -6,7 +6,16 @@ The application shows a Google map with markers of these places.  Clicking the m
 
 ## Getting Started
 
-Download or clone this repository to any folder on your system.  Start the Apache simple server web server.  Launch index.html.  If the dependencies are not loaded, please see the Bower.json file for more information.
+Download or clone this repository to any folder on your system.  
+Start the python simple server web server fromt he same folder as the repository (this will become the webroot when you start the http server).
+
+`python -m SimpleHTTPServer 8000`
+
+Open a browser window and navigate to localhost:8000
+
+Note: If the dependencies are not loaded, please see the Bower.json file for more information.
+
+
 
 ## Map Markers
 
@@ -21,6 +30,8 @@ Clicking the Map Markers open an InfoWindow and will initiate an API call to Fou
 A Filter control is at the Top Center of the Google Map.  Clicking the control will open a Modal window that should size itself appropriately to the screen size.
 
 To filter the location, start typing in the input box.  Any location name that does not match the filter text will be hidden.  This is a simple "substring" search.
+
+Another option is to just click on one of the list items to narrow the items to that specific item.
 
 ## Developer Information
 
