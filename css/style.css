@@ -1,1 +1,33 @@
-/* File seems to be required by the Udacity Submission engine, but I didnt use a style.css file in this project */
+html, body { 
+	height: 100%; 
+	margin: 0; 
+	padding: 0; 
+}
+
+.filterControlBorder {
+	background-color: #fff;
+	border: 2px solid #fff;
+	border-radius: 3px;
+	box-shadow: 0 2px 6px rgba(0,0,0,.3);
+	cursor: pointer;
+	margin-bottom: 22px;
+	text-align: center;
+
+}
+.filterControlButton {
+	color: rgb(25,25,25);
+	font-family: Roboto,Arial,sans-serif;
+	font-size: 16px;
+	line-height: 38px;
+	padding-left: 5px;
+	padding-right: 5px;
+}
+
+.filterItem {
+	color: blue;
+	cursor: pointer;
+}
+
+#map { 
+	height: 100%; 
+}

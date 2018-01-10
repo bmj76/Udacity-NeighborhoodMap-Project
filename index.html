@@ -9,11 +9,9 @@
  
 		<title>Interesting Places in Manchester, Missouri</title>
 
-		<script onerror='alert("Google Maps failed to load")' src="https://maps.googleapis.com/maps/api/js?libraries=places&v=3&key=AIzaSyC4zNvCS5AZoJGf_c9CGQnApezYSoYc3gU"></script>
 		<link href="bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
-		<style type="text/css">
-			html, body { height: 100%; margin: 0; padding: 0; }
-			#map { height: 100%; }
+		<link href="css/style.css" rel="stylesheet">
+
 		</style>
 	</head>
 
@@ -31,9 +29,10 @@
 					<div class="modal-body">
 						<div>
 							<!-- The knockout binding to a select box -->
-							<p>Filter: <input data-bind="textInput: currentFilter" placeholder="Enter Filter Text" /></p>
+							<p>Filter: <input id="inputFilter" data-bind="textInput: currentFilter" placeholder="Enter Filter Text" /></p>
 							<ul data-bind="foreach: filterPlaces">
-								<li data-bind="text: name"></li>
+								<li class="filterItem" data-bind="text: name, click: $parent.selectListItem"></li>
+								<!-- <li class="filterItem" data-bind="text: name, click: function(){$parent.selectItem($parent, $data);}"></li> -->
 							</ul>
 						</div>
 					</div>
@@ -53,6 +52,7 @@
 		<script src="bower_components/knockout/dist/knockout.js"></script>
 		<script src="js/neighborhoodmap.js"></script>
 		
+		<script async defer onerror='alert("Google Maps failed to load")' src="https://maps.googleapis.com/maps/api/js?libraries=places&v=3&key=AIzaSyC4zNvCS5AZoJGf_c9CGQnApezYSoYc3gU&callback=startPage"></script>
 	</body>
 </html>
 

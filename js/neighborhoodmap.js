@@ -51,20 +51,20 @@ var Place = function(data) {
 // The ViewModel function
 var ViewModel = function() {
 	var self = this;
-	var markers = [];
 	this.placeList = ko.observableArray([]);
 
 	initialPlaces.forEach(function(placeItem){
 			self.placeList.push(new Place(placeItem));
 	});
 	
-	self.currentFilter = ko.observable(); // property to store the filter
+	self.currentFilter = ko.observable(''); // property to store the filter
 
 	// A computed column to track which items match the currentFilter
 	self.filterPlaces = ko.computed(function() {
 		return ko.utils.arrayFilter(self.placeList(), function(place) {
 			//return place.name() == self.currentFilter();
-			if (place.name().indexOf(self.currentFilter()) > -1) {
+			currentFilterValue = self.currentFilter();
+			if (place.name().indexOf(currentFilterValue) > -1) {
 				//console.log('setting ' + place.name() + ' to: true');
 				place.isVisible(true);
 				return true;
@@ -79,24 +79,13 @@ var ViewModel = function() {
 	function FilterControl(controlDiv, map) {
 		// Set CSS for the control border.
 		var controlUI = document.createElement('div');
-		controlUI.style.backgroundColor = '#fff';
-		controlUI.style.border = '2px solid #fff';
-		controlUI.style.borderRadius = '3px';
-		controlUI.style.boxShadow = '0 2px 6px rgba(0,0,0,.3)';
-		controlUI.style.cursor = 'pointer';
-		controlUI.style.marginBottom = '22px';
-		controlUI.style.textAlign = 'center';
+		controlUI.classList.add("filterControlBorder");
 		controlUI.title = 'Click to Open the Map Filter';
 		controlDiv.appendChild(controlUI);
 
 		// Set CSS for the control interior.
 		var controlText = document.createElement('div');
-		controlText.style.color = 'rgb(25,25,25)';
-		controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
-		controlText.style.fontSize = '16px';
-		controlText.style.lineHeight = '38px';
-		controlText.style.paddingLeft = '5px';
-		controlText.style.paddingRight = '5px';
+		controlUI.classList.add("filterControlButton");
 		controlText.innerHTML = 'Filter Markers';
 		controlUI.appendChild(controlText);
 
@@ -215,8 +204,7 @@ var ViewModel = function() {
 				id: countItems
 			});
 
-			//Push onto an array to track our markers so we can access them later easily
-			markers.push(marker);
+			//Create the InfoWindow
 			var infowindow = new google.maps.InfoWindow({
 				content: item.name()
 			});
@@ -224,16 +212,15 @@ var ViewModel = function() {
 			// Subscribe to the isVisible variable so that when it changes, so do the markers.  cool.
 			console.log(item.name() + ': ' + item.isVisible());
 			item.isVisible.subscribe(function(currentState) {
-				console.log(item.name() + ': ' + item.isVisible());
-				if (currentState) {
-					marker.setMap(map);
-				} else {
-					marker.setMap(null);
-				}
+				//console.log(item.name() + ': ' + item.isVisible());
+				marker.setVisible(currentState);
 			});
 
-			//call back for the infowindow
-			//Code Source: https://stackoverflow.com/questions/6777721/google-maps-api-v3-infowindow-close-event-callback
+			//Add the marker to each placeList item as a property per suggest of Udacity reviewer
+			item.marker = marker;
+			
+			/*	call back for the infowindow
+				Code Source: https://stackoverflow.com/questions/6777721/google-maps-api-v3-infowindow-close-event-callback */
 			google.maps.event.addListener(infowindow,'closeclick',function(){
 				currentMark.setIcon(defaultIcon);
 			});
@@ -266,8 +253,8 @@ var ViewModel = function() {
 		  zoom: 15
 		});
 
-		// Create the DIV to hold the control and call the FilterControl()
-		// constructor passing in this DIV.
+		/*	Create the DIV to hold the control and call the FilterControl()
+			constructor passing in this DIV. */
 		var filterControlDiv = document.createElement('div');
 		var filterControl = new FilterControl(filterControlDiv, map);
 		filterControlDiv.index = 1;
@@ -277,19 +264,38 @@ var ViewModel = function() {
 		buildMarkers(map);
 	})();
 
-	// Code Source: Udacity API Course
-	// This function takes in a COLOR, and then creates a new marker
-	// icon of that color. The icon will be 21 px wide by 34 high, have an origin
-	// of 0, 0 and be anchored at 10, 34).
+	/*	Code Source: Udacity API Course
+		This function takes in a COLOR, and then creates a new marker
+		icon of that color. The icon will be 21 px wide by 34 high, have an origin
+		of 0, 0 and be anchored at 10, 34). */
 	function makeMarkerIcon(markerColor) {
 		var markerImage = new google.maps.MarkerImage('http://chart.googleapis.com/chart?chst=d_map_spin&chld=1.15|0|'+ markerColor +
 			'|40|_|%E2%80%A2',
 		new google.maps.Size(21, 34),
 		new google.maps.Point(0, 0),
-		new google.maps.Point(10, 34));
+		new google.maps.Point(10, 34),
+		new google.maps.Size(21, 34));
 		return markerImage;
 	}
+
+	self.selectListItem = function(place) {
+		//self.placeList.remove(place);
+		/* 	We want to loop over the placeList array and hide all
+			the items except for the clicked item from the Filter
+			Window */
+		ko.utils.arrayForEach(self.placeList(), function(item) {
+			if (item != place) {
+				item.marker.setVisible(false);
+			} else {
+				$('#inputFilter').val(item.name());
+				item.marker.setVisible(true);
+			}
+
+		});
+    }
 };
 
 //Apply the Knockout bindings
-ko.applyBindings(new ViewModel());
+function startPage() {
+	ko.applyBindings(new ViewModel());
+}
