@@ -289,6 +289,8 @@ var ViewModel = function() {
 			} else {
 				$('#inputFilter').val(item.name());
 				item.marker.setVisible(true);
+				self.currentFilter(item.name());
+
 			}
 
 		});

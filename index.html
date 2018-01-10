@@ -29,7 +29,10 @@
 					<div class="modal-body">
 						<div>
 							<!-- The knockout binding to a select box -->
-							<p>Filter: <input id="inputFilter" data-bind="textInput: currentFilter" placeholder="Enter Filter Text" /></p>
+							<p>
+								Filter: <input type="search" id="inputFilter" data-bind="value: currentFilter, valueUpdate: ['keyup','search']" placeholder="Enter Filter Text" />
+								<a href://
+							</p>
 							<ul data-bind="foreach: filterPlaces">
 								<li class="filterItem" data-bind="text: name, click: $parent.selectListItem"></li>
 								<!-- <li class="filterItem" data-bind="text: name, click: function(){$parent.selectItem($parent, $data);}"></li> -->
