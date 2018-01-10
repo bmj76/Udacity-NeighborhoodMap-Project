@@ -216,8 +216,7 @@ var ViewModel = function() {
 				marker.setVisible(currentState);
 			});
 
-			//Add the marker to each placeList item as a property per suggest of Udacity reviewer
-			item.marker = marker;
+
 			
 			/*	call back for the infowindow
 				Code Source: https://stackoverflow.com/questions/6777721/google-maps-api-v3-infowindow-close-event-callback */
@@ -225,8 +224,7 @@ var ViewModel = function() {
 				currentMark.setIcon(defaultIcon);
 			});
 
-			marker.addListener('click', function() {
-				// var to keep a pointer to the 'this' scope
+			marker.openMe = function(marker) {
 				var that = this;
 				
 				getFourSquareData(infowindow,map,marker);
@@ -239,7 +237,15 @@ var ViewModel = function() {
 				}, 3000);
 				currentMark = that;
 				that.setIcon(selectedIcon);
+			}
+			marker.addListener('click', function() {
+				// var to keep a pointer to the 'this' scope
+				this.openMe(this);
 			});
+
+			//Add the marker to each placeList item as a property per suggest of Udacity reviewer
+			item.marker = marker;
+
 			countItems++;
 		});
 	}
@@ -290,7 +296,7 @@ var ViewModel = function() {
 				$('#inputFilter').val(item.name());
 				item.marker.setVisible(true);
 				self.currentFilter(item.name());
-
+				item.marker.openMe(item.marker);
 			}
 
 		});
